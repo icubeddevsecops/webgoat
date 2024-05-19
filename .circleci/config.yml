@@ -22,6 +22,16 @@ jobs:
           key: cache-{{ checksum "/tmp/CIRCLECI_CACHE_KEY" }}
           paths:
             - ~/.m2/repository
+    odc-backend:
+      machine: true
+      steps:
+        - checkout
+
+        - run: chmod +x ./run-depcheck.sh && ./run-depcheck.sh
+
+        - store_artifacts:
+          path: reports/dependency-check-report.json
+          destination: depcheck-artifact
   deploy:
     # This is an example deploy job, not actually used by the workflow
     docker:
@@ -35,9 +45,13 @@ jobs:
           name: found github actions config
           command: ':'
 workflows:
-  build-and-test:
+  version: 2
+  webgoat:
     jobs:
-      - test-java
-    # - deploy:
-    #     requires:
-    #       - test-java
+      - build
+      - test:
+          requires:
+            - build
+      - odc-backend:
+          requires:
+            - test
